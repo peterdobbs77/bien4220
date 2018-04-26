@@ -1,0 +1,1 @@
+"./stop_light.obj" "../lnk_msp430f2012.cmd" -llibc.a 

@@ -1,0 +1,51 @@
+;*******************************************************************************
+;   MSP430F20xx Demo - Timer_A, Toggle P1.1/TA0, Up/Down Mode, DCO SMCLK
+;
+;   Description: Toggle P1.1 using hardware TA0 output. Timer_A is configured
+;   for up/down mode with CCR0 defining period, TA0 also output on P1.1. In
+;   this example, CCR0 is loaded with 250 and TA0 will toggle P1.1 at
+;   TACLK/2*250. Thus the output frequency on P1.1 will be the TACLK/1000.
+;   No CPU or software resources required.
+;   SMCLK = MCLK = TACLK = default DCO
+;
+;                MSP430F20xx
+;             -----------------
+;         /|\|              XIN|-
+;          | |                 |
+;          --|RST          XOUT|-
+;            |                 |
+;            |         P1.1/TA0|--> SMCLK/1000
+;
+;   P.Thanigai
+;   Texas Instruments Inc.
+;   May 2007
+;   Built with Code Composer Essentials Version: 2.0
+;*******************************************************************************
+ 	.cdecls C,LIST,  "msp430f2012.h"
+ 	.global _initialize            ; export initialize as a global symbol
+	.global _TimerA0_isr           ;
+	.def	RESET
+;------------------------------------------------------------------------------
+            .text                           ; Progam Start
+;------------------------------------------------------------------------------
+RESET       mov.w   #0280h,SP               ; Initialize stackpointer
+StopWDT     mov.w   #WDTPW+WDTHOLD,&WDTCTL  ; Stop WDT
+SetupP1     bis.b   #002h,&P1DIR            ; P1.1 output
+            bis.b   #002h,&P1SEL            ; P1.1 option slect
+SetupC0     mov.w   #OUTMOD_4,&CCTL0        ; CCR0 toggle mode
+            mov.w   #6400,&CCR0              ;
+;SetupTA     mov.w   #TASSEL_2+MC_3,&TACTL   ; SMCLK, updown mode
+SetupTA     mov.w   #TASSEL_1+ID_1+MC_1,&TACTL   ; SMCLK, continuous mode
+                                            ;
+Mainloop    bis.w   #CPUOFF,SR              ; CPU off
+            nop                             ; Required only for debugger
+                                            ;
+;------------------------------------------------------------------------------
+;           Interrupt Vectors
+;------------------------------------------------------------------------------
+            .sect   ".reset"                ; MSP430 RESET Vector
+            .short  RESET                   ;
+            .sect	".int09"				; MSP430 interrupt 9
+            .short	SetupTA					;
+            .end
+
